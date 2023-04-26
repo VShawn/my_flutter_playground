@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:store/widgets/dir_item.dart';
+
+import 'models/dir_info.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,16 +53,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // 添加一个图片地址
-  final String _imagePath = 'D:\\t\\0.jpg';
-
-  // // 设置 _imagePath，更新界面显示
-  // void _setImagePath(String path) {
-  //   setState(() {
-  //     _imagePath = path;
-  //   });
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,70 +68,15 @@ class _MyHomePageState extends State<MyHomePage> {
       //     ),
       //   ],
       // ),
-      body: Wrap(
-        children: [
-          Item(imagePath: _imagePath, title: '测试1'),
-          Item(imagePath: 'D:\\t\\1.jpg', title: '测试2'),
-        ],
-      ),
-    );
-  }
-}
-
-class Item extends StatelessWidget {
-  const Item({
-    super.key,
-    required String imagePath,
-    required String title,
-  })  : _imagePath = imagePath,
-        _title = title;
-
-  final String _imagePath;
-  final String _title;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        print('点击了图片' + _imagePath);
-      },
-      child: Card(
-        elevation: 15,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: SizedBox(
-          width: 150,
-          height: 150,
-          child: Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              Image.file(
-                File(_imagePath),
-                fit: BoxFit.fitHeight,
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.black38,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(5),
-                    child: Text(
-                      _title,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontFamily: 'Microsoft YaHei'),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(18.0),
+        child: Wrap(
+          children: [
+            DirItem(dirInfo: DirInfo('测试1', 'D:\\t', 'D:\\t\\0.jpg')),
+            DirItem(
+                dirInfo: DirInfo(
+                    '测试2', 'D:\\t\\Test', 'D:\\t\\Test\\20220616013_WDF.jpg')),
+          ],
         ),
       ),
     );
