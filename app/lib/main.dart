@@ -18,17 +18,34 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
+          brightness: Brightness.light,
+          // 2.primarySwatch: primaryColor/accentColor的结合体
+          primarySwatch: Colors.blue,
+          // 3.主要颜色: 导航/底部TabBar
+          primaryColor: Colors.green,
+          // 4.次要颜色: FloatingActionButton/按钮颜色
+          secondaryHeaderColor: Colors.red,
+          // 5.卡片主题
+          cardTheme: CardTheme(
+              color: Colors.white,
+              elevation: 10,
+              shape: Border.all(width: 0, color: Colors.red),
+              margin: EdgeInsets.all(10)),
+          colorScheme:
+              ColorScheme.fromSwatch().copyWith(secondary: Colors.yellow),
+          // 6.按钮主题
+          buttonTheme: ButtonThemeData(minWidth: 0, height: 25),
+          // 7.文本主题
+          fontFamily: 'Microsoft YaHei UI',
+          textTheme: const TextTheme(
+            displayLarge:
+                TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+            titleLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            bodyMedium: TextStyle(fontSize: 14.0),
+          ),
+          splashColor: Colors.transparent,
+          // 点击的水波纹设置为无色
+          highlightColor: Colors.transparent),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }

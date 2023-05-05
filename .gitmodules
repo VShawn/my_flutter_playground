@@ -1,0 +1,3 @@
+[submodule "packages/archive"]
+	path = packages/archive
+	url = https://github.com/VShawn/archive.git
