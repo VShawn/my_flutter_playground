@@ -21,7 +21,7 @@ class DirItem extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // TODO 点击事件
-        print('点击了图片' + _dirInfo.coverPath);
+        print('点击了文件夹' + _dirInfo.name);
         //导航到新路由
         Navigator.push(context, MaterialPageRoute(builder: (context) {
           return Viewer(dirInfo: _dirInfo);
@@ -54,10 +54,14 @@ class DirItem extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              Image.file(
-                File(_dirInfo.coverPath),
+              Image.memory(
+                _dirInfo.getCoverBytesSync(),
                 fit: BoxFit.fitHeight,
               ),
+              // Image.file(
+              //   File(_dirInfo.coverPath),
+              //   fit: BoxFit.fitHeight,
+              // ),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(

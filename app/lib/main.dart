@@ -31,15 +31,13 @@ class MyApp extends StatelessWidget {
               elevation: 10,
               shape: Border.all(width: 0, color: Colors.red),
               margin: EdgeInsets.all(10)),
-          colorScheme:
-              ColorScheme.fromSwatch().copyWith(secondary: Colors.yellow),
+          colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.yellow),
           // 6.按钮主题
           buttonTheme: ButtonThemeData(minWidth: 0, height: 25),
           // 7.文本主题
           fontFamily: 'Microsoft YaHei UI',
           textTheme: const TextTheme(
-            displayLarge:
-                TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+            displayLarge: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
             titleLarge: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             bodyMedium: TextStyle(fontSize: 14.0),
           ),
@@ -53,18 +51,7 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
-
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -90,9 +77,10 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Wrap(
           children: [
             DirItem(dirInfo: DirInfo('测试1', 'D:\\t', 'D:\\t\\0.jpg')),
-            DirItem(
-                dirInfo: DirInfo(
-                    '测试2', 'D:\\t\\Test', 'D:\\t\\Test\\20220616013_WDF.jpg')),
+            DirItem(dirInfo: DirInfo('测试2', 'D:\\t\\Test', 'D:\\t\\Test\\20220616013_WDF.jpg')),
+            DirItem(dirInfo: DirInfo.zip('zip1', 'D:\\t\\t.zip')),
+            DirItem(dirInfo: DirInfo.zip('t.zip', 'D:\\t\\t.zip')),
+            // DirItem(dirInfo: DirInfo.zip('zip2', r'D:\Flutter\zip_test\test2.zip')),
           ],
         ),
       ),

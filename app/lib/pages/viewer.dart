@@ -1,24 +1,41 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 import 'package:extended_image/extended_image.dart';
+import 'package:archive/archive_io.dart';
 import '../models/dir_info.dart';
 import '../utils/file_helper.dart';
+import '../widgets/image_item.dart';
 
 class Viewer extends StatefulWidget {
   Viewer({
     super.key,
     required DirInfo dirInfo,
   }) : _dirInfo = dirInfo {
-    _fileList = listFilesSync(_dirInfo.path,
-        includingSubDir: true, extensions: [".jpg", ".png", ".bmp"]);
+    final exts = [".jpg", ".png", ".bmp", ".webp"];
+    if (_dirInfo.isZip) {
+      final inputStream = InputFileStream(_dirInfo.path);
+      _archive = ZipDecoder().decodeBuffer(inputStream);
+      if (_archive?.files.isNotEmpty == true) {
+        _fileList = _archive!.files
+            .where((e) => e.isFile && exts.contains(path.extension(e.name).toLowerCase()))
+            .map((e) => ImageItemInZip(e.name, e))
+            .toList();
+      }
+    } else {
+      final list = listFilesSync(_dirInfo.path, includingSubDir: true, extensions: exts);
+      _fileList = list.map((e) => ImageItemBase(e)).toList();
+    }
     print('Viewer Opened with ${_fileList.length} files in ${_dirInfo.path}');
   }
 
   // final String _imagePath;
   // final String _title;
   final DirInfo _dirInfo;
-  List<String> _fileList = [];
+  Archive? _archive;
+  List<ImageItemBase> _fileList = [];
 
   @override
   State<Viewer> createState() => _ViewerState();
@@ -56,8 +73,9 @@ class _ViewerState extends State<Viewer> {
               preloadPagesCount: 2,
               itemBuilder: (BuildContext context, int index) {
                 var item = widget._fileList[index];
-                Widget image = ExtendedImage.file(
-                  File(item),
+                print(item.key + " is shown");
+                Widget image = ExtendedImage.memory(
+                  item.getImageBytesSync() as Uint8List,
                   fit: BoxFit.contain,
                   mode: ExtendedImageMode.gesture,
                   initGestureConfigHandler: (state) {
@@ -77,13 +95,21 @@ class _ViewerState extends State<Viewer> {
                 );
                 if (index == currentIndex) {
                   return Hero(
-                    tag: item + index.toString(),
+                    tag: item.key + index.toString(),
                     child: image,
                   );
                 } else {
                   return image;
                 }
               },
+            ),
+            SizedBox(
+              height: 50,
+              width: 50,
+              child: Image.memory(
+                widget._fileList[currentIndex].getImageBytesSync(),
+                fit: BoxFit.fitHeight,
+              ),
             ),
             Align(
               //图片index显示
@@ -99,14 +125,17 @@ class _ViewerState extends State<Viewer> {
                     "${currentIndex + 1}/${widget._fileList.length}",
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontFamily: 'Microsoft YaHei'),
+                    style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Microsoft YaHei'),
                   ),
                 ),
               ),
-            )
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('确定'),
+            ),
           ],
         ));
   }
