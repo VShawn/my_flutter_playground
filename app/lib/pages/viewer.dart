@@ -5,27 +5,33 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:extended_image/extended_image.dart';
 import 'package:archive/archive_io.dart';
+import '../constants.dart';
 import '../models/dir_info.dart';
 import '../utils/file_helper.dart';
 import '../widgets/image_item.dart';
 
 class Viewer extends StatefulWidget {
+  String password = '';
   Viewer({
     super.key,
     required DirInfo dirInfo,
+    this.password = '',
   }) : _dirInfo = dirInfo {
-    final exts = [".jpg", ".png", ".bmp", ".webp"];
     if (_dirInfo.isZip) {
       final inputStream = InputFileStream(_dirInfo.path);
-      _archive = ZipDecoder().decodeBuffer(inputStream);
+      _archive = ZipDecoder().decodeBuffer(inputStream, password: password);
       if (_archive?.files.isNotEmpty == true) {
         _fileList = _archive!.files
-            .where((e) => e.isFile && exts.contains(path.extension(e.name).toLowerCase()))
+            .where((e) =>
+                e.isFile &&
+                Constants.supportedImage
+                    .contains(path.extension(e.name).toLowerCase()))
             .map((e) => ImageItemInZip(e.name, e))
             .toList();
       }
     } else {
-      final list = listFilesSync(_dirInfo.path, includingSubDir: true, extensions: exts);
+      final list = listFilesSync(_dirInfo.path,
+          includingSubDir: true, extensions: Constants.supportedImage);
       _fileList = list.map((e) => ImageItemBase(e)).toList();
     }
     print('Viewer Opened with ${_fileList.length} files in ${_dirInfo.path}');
@@ -125,7 +131,10 @@ class _ViewerState extends State<Viewer> {
                     "${currentIndex + 1}/${widget._fileList.length}",
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Microsoft YaHei'),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontFamily: 'Microsoft YaHei'),
                   ),
                 ),
               ),

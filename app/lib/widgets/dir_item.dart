@@ -1,30 +1,46 @@
 import 'dart:io';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:store/pages/viewer.dart';
 
 import '../models/dir_info.dart';
 
-class DirItem extends StatelessWidget {
+class DirItem extends StatefulWidget {
   const DirItem({
-    super.key,
-    required DirInfo dirInfo,
-  }) : _dirInfo = dirInfo;
+    Key? key,
+    required this.dirInfo,
+  }) : super(key: key);
+  final DirInfo dirInfo;
 
-  // final String _imagePath;
-  // final String _title;
-  final DirInfo _dirInfo;
+  @override
+  State<DirItem> createState() => _DirItemState();
+}
+
+class _DirItemState extends State<DirItem> {
+  Uint8List? corverBytes;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadDirItems();
+  }
+
+  Future<void> _loadDirItems() async {
+    corverBytes = await widget.dirInfo.getCoverBytes();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         // TODO 点击事件
-        print('点击了文件夹' + _dirInfo.name);
+        print('点击了文件夹' + widget.dirInfo.name);
         //导航到新路由
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return Viewer(dirInfo: _dirInfo);
+          return Viewer(dirInfo: widget.dirInfo, password: widget.dirInfo.psw);
         }));
 
         // showDialog(
@@ -55,7 +71,7 @@ class DirItem extends StatelessWidget {
             fit: StackFit.expand,
             children: <Widget>[
               Image.memory(
-                _dirInfo.getCoverBytesSync(),
+                widget.dirInfo.getCoverBytesSync(),
                 fit: BoxFit.fitHeight,
               ),
               // Image.file(
@@ -72,7 +88,7 @@ class DirItem extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.all(5),
                     child: Text(
-                      _dirInfo.name,
+                      widget.dirInfo.name,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: TextStyle(

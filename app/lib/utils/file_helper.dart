@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:path/path.dart' as p;
+import '../models/book_info.dart';
 
 /// 一个工具函数，用于列出输入目录中的所有后缀名包括在输入参数 extensions 的文件（当可选参数 includingSubDir = true 时，包括子目录）
 /// ```
@@ -16,22 +19,6 @@ List<String> listFilesSync(String directoryPath,
     print('Directory not found');
     return fileList;
   }
-
-  // print('Directory found');
-  // final List<FileSystemEntity> list = dir.listSync();
-  // for (var fileOrDir in list) {
-  //   if (fileOrDir is File &&
-  //       (extensions == null ||
-  //           extensions.any((ext) =>
-  //               fileOrDir.path.toLowerCase().endsWith(ext.toLowerCase())))) {
-  //     fileList.add(fileOrDir.path);
-  //   } else if (fileOrDir is Directory && includingSubDir) {
-  //     fileList.addAll(listFilesSync(fileOrDir.path,
-  //         extensions: extensions, includingSubDir: includingSubDir));
-  //   } else {
-  //     // print('Not a file: ${fileOrDir.path}');
-  //   }
-  // }
 
   for (var fileOrDir in dir.listSync(recursive: includingSubDir)) {
     if (fileOrDir is File &&
@@ -66,4 +53,45 @@ Future<List<String>> listFilesAync(String directoryPath,
     }
   }
   return fileList;
+}
+
+// 一个函数，输入文件夹路径，列出其中的子文件夹
+
+// 输入文件夹路径和支持的文件后缀，返回一个包含所有文件的列表
+Future<List<BookInfo>> listBooks(String path, {List<String>? bookExts}) async {
+  bookExts ??= [".zip", ".epub", ".cbz", ".mobi"];
+  var dir = Directory(path);
+  if (!dir.existsSync()) {
+    return [];
+  }
+  var files = dir.listSync();
+  var books = <BookInfo>[];
+  for (var file in files) {
+    if (file is File) {
+      var ext = p.extension(file.path).toLowerCase();
+      if (bookExts!.contains(ext)) {
+        var name = p.basenameWithoutExtension(file.path);
+        // 文件的 hash
+        books.add(
+            BookInfo(name: name, zipPath: file.path, hash: 'hash', size: 0));
+      }
+    }
+  }
+  return books;
+}
+
+Future<Uint8List> getFileBytes(String path) async {
+  var file = File(path!);
+  if (!file.existsSync()) {
+    return Uint8List(0);
+  }
+  return file.readAsBytes();
+}
+
+Uint8List getFileBytesSync(String path) {
+  var file = File(path);
+  if (!file.existsSync()) {
+    return Uint8List(0);
+  }
+  return file.readAsBytesSync();
 }
