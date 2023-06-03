@@ -11,14 +11,11 @@ import '../utils/file_helper.dart';
 import '../widgets/dir_item.dart';
 
 class ImageListPage extends StatefulWidget {
-  final DirInfo dirInfo;
-  final String password;
+  final String title;
+  final List<ImageItemBase> imageItemBases;
+  final int index;
 
-  ImageListPage({
-    Key? key,
-    required this.dirInfo,
-    this.password = '',
-  }) : super(key: key);
+  ImageListPage({Key? key, required this.imageItemBases, this.index = 0, required this.title}) : super(key: key);
 
   @override
   State<ImageListPage> createState() => _ImageListPageState();
@@ -27,27 +24,10 @@ class ImageListPage extends StatefulWidget {
 class _ImageListPageState extends State<ImageListPage> {
   final PageController _pageController = PageController();
   final Map<int, Uint8List?> _imageData = {};
-  List<ImageItemBase> fileList = [];
 
   @override
   void initState() {
     super.initState();
-
-    if (widget.dirInfo.isZip) {
-      final inputStream = InputFileStream(widget.dirInfo.path);
-      var archive = ZipDecoder().decodeBuffer(inputStream, password: widget.password);
-      if (archive.files.isNotEmpty == true) {
-        fileList = archive.files
-            .where((e) => e.isFile && Constants.supportedImage.contains(p.extension(e.name).toLowerCase()))
-            .map((e) => ImageItemInZip(e.name, e))
-            .toList();
-      }
-    } else {
-      final list = listFilesSync(widget.dirInfo.path, includingSubDir: true, extensions: Constants.supportedImage);
-      fileList = list.map((e) => ImageItemBase(e)).toList();
-    }
-    print('Viewer Opened with ${fileList.length} files in ${widget.dirInfo.path}');
-
     _pageController.addListener(_loadImages);
   }
 
@@ -61,35 +41,35 @@ class _ImageListPageState extends State<ImageListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.dirInfo.name),
+        title: Text(widget.title),
       ),
       body: ListView.builder(
+        itemExtent: 600,
         controller: _pageController,
-        itemCount: fileList.length,
+        itemCount: widget.imageItemBases.length,
         itemBuilder: (BuildContext context, int index) {
-          final item = fileList[index];
+          final item = widget.imageItemBases[index];
+          final color = index % 2 == 0 ? Colors.red : Colors.blue;
           return Padding(
             padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              child: FutureBuilder<Uint8List>(
-                future: item.getImageBytesAsync(),
-                builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
-                  if (snapshot.hasData) {
-                    return Image.memory(
-                      snapshot.data!,
-                      fit: BoxFit.cover,
-                    );
-                  } else {
-                    return SizedBox(
-                      height: 256, // set the height to 48
-                      width: 256, // set the width to 48
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                      ),
-                    );
-                  }
-                },
-              ),
+            child: FutureBuilder<Uint8List>(
+              future: item.getImageBytesAsync(),
+              builder: (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
+                if (snapshot.hasData) {
+                  return Image.memory(
+                    snapshot.data!,
+                    fit: BoxFit.fitHeight,
+                  );
+                } else {
+                  return SizedBox(
+                    height: 256, // set the height to 48
+                    width: 256, // set the width to 48
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                  );
+                }
+              },
             ),
           );
         },
@@ -102,7 +82,7 @@ class _ImageListPageState extends State<ImageListPage> {
     final int previousPage = currentPage - 1;
     final int nextPage = currentPage + 1;
     const int preloadDistance = 2; // adjust this value as needed
-    for (int i = 0; i < fileList.length; i++) {
+    for (int i = 0; i < widget.imageItemBases.length; i++) {
       if (i < previousPage - preloadDistance || i > nextPage + preloadDistance) {
         _imageData.remove(i);
       }
@@ -110,8 +90,8 @@ class _ImageListPageState extends State<ImageListPage> {
     final int firstVisibleIndex = currentPage - preloadDistance;
     final int lastVisibleIndex = currentPage + preloadDistance;
     for (int i = firstVisibleIndex; i <= lastVisibleIndex; i++) {
-      if (i >= 0 && i < fileList.length && _imageData[i] == null) {
-        fileList[i].getImageBytesAsync().then((value) {
+      if (i >= 0 && i < widget.imageItemBases.length && _imageData[i] == null) {
+        widget.imageItemBases[i].getImageBytesAsync().then((value) {
           setState(() {
             _imageData[i] = value;
           });

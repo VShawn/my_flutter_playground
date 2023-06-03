@@ -4,8 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:store/pages/viewer.dart';
 import 'package:store/pages/image_list_page.dart';
+import 'package:archive/archive_io.dart';
 
+import 'package:path/path.dart' as p;
+import '../constants.dart';
 import '../models/dir_info.dart';
+import '../pages/ViewImageRight2Left.dart';
+import 'image_item.dart';
+import '../utils/file_helper.dart';
 
 class DirItem extends StatefulWidget {
   const DirItem({
@@ -41,8 +47,32 @@ class _DirItemState extends State<DirItem> {
         print('点击了文件夹' + widget.dirInfo.name);
         //导航到新路由
         Navigator.push(context, MaterialPageRoute(builder: (context) {
+          List<ImageItemBase> fileList = [];
+          if (widget.dirInfo.isZip) {
+            final inputStream = InputFileStream(widget.dirInfo.path);
+            var archive = ZipDecoder().decodeBuffer(inputStream, password: widget.dirInfo.psw);
+            if (archive.files.isNotEmpty == true) {
+              fileList = archive.files
+                  .where((e) => e.isFile && Constants.supportedImage.contains(p.extension(e.name).toLowerCase()))
+                  .map((e) => ImageItemInZip(e.name, e))
+                  .toList();
+            }
+          } else {
+            final list = listFilesSync(widget.dirInfo.path, includingSubDir: true, extensions: Constants.supportedImage);
+            fileList = list.map((e) => ImageItemBase(e)).toList();
+          }
+          print('Viewer Opened with ${fileList.length} files in ${widget.dirInfo.path}');
+
+          return ViewImageRight2Left(
+            imageItemBases: fileList,
+            index: 0,
+            title: widget.dirInfo.name,
+          );
           return ImageListPage(
-              dirInfo: widget.dirInfo, password: widget.dirInfo.psw);
+            imageItemBases: fileList,
+            index: 0,
+            title: widget.dirInfo.name,
+          );
         }));
       },
       child: Card(
@@ -80,10 +110,7 @@ class _DirItemState extends State<DirItem> {
                       widget.dirInfo.name,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontFamily: 'Microsoft YaHei'),
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Microsoft YaHei'),
                     ),
                   ),
                 ),

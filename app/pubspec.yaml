@@ -13,6 +13,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   sqflite: ^2.2.8+2
+  path: ^1.8.0
+  archive:
+    path: ../packages/archive
 
 dev_dependencies:
   flutter_test:
@@ -20,9 +23,6 @@ dev_dependencies:
   json_model: ^1.0.0
   json_serializable: ^5.0.0
   extended_image: ^7.0.0
-  path: ^1.8.0
-  archive:
-    path: ../packages/archive
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
