@@ -30,19 +30,14 @@ class BookInfo {
   BookInfo.fromZipPath(String zipPath, {String psw = ""})
       : name = p.basenameWithoutExtension(zipPath),
         zipPath = zipPath,
-        hash = File(zipPath)
-            .statSync()
-            .modified
-            .millisecondsSinceEpoch
-            .toRadixString(16) {
+        hash = File(zipPath).statSync().modified.millisecondsSinceEpoch.toRadixString(16) {
     size = File(zipPath).lengthSync();
     final inputStream = InputFileStream(zipPath);
     final archive = ZipDecoder().decodeBuffer(inputStream, password: psw);
     for (var file in archive.files) {
       // is jpg file
       final filename = file.name.toLowerCase();
-      if (file.isFile &&
-          Constants.supportedImage.any((ext) => filename.endsWith(ext))) {
+      if (file.isFile && Constants.supportedImage.any((ext) => filename.endsWith(ext))) {
         coverBytes = file.content as Uint8List;
         break;
       }
