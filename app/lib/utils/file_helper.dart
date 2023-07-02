@@ -69,7 +69,7 @@ Future<List<BookInfo>> listBooks(String path, {List<String>? bookExts}) async {
   for (var file in files) {
     if (file is File) {
       var ext = p.extension(file.path).toLowerCase();
-      if (bookExts!.contains(ext)) {
+      if (bookExts.contains(ext)) {
         var name = p.basenameWithoutExtension(file.path);
         // 文件的 hash
         books.add(
@@ -81,7 +81,7 @@ Future<List<BookInfo>> listBooks(String path, {List<String>? bookExts}) async {
 }
 
 Future<Uint8List> getFileBytes(String path) async {
-  var file = File(path!);
+  var file = File(path);
   if (!file.existsSync()) {
     return Uint8List(0);
   }

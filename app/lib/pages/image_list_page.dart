@@ -5,10 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:store/models/dir_info.dart';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
-import '../constants.dart';
 import '../widgets/image_item.dart';
-import '../utils/file_helper.dart';
-import '../widgets/dir_item.dart';
 
 class ImageListPage extends StatefulWidget {
   final String title;

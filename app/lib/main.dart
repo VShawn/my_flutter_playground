@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:store/widgets/dir_item.dart';
 import 'package:store/widgets/infinite_page_view.dart';
 import 'package:store/widgets/zoom_image.dart';
@@ -18,6 +19,9 @@ void main() async {
 }
 
 Future<Database> initDatabase() async {
+  if (Platform.isWindows) {
+    databaseFactory = databaseFactoryFfi;
+  }
   final database = openDatabase(
     join(await getDatabasesPath(), 'my_database.db'),
     onCreate: (db, version) {

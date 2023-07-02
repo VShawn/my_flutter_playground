@@ -25,7 +25,6 @@ dev_dependencies:
     sdk: flutter
   json_model: ^1.0.0
   json_serializable: ^5.0.0
-  extended_image: ^7.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
