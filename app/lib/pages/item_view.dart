@@ -8,32 +8,32 @@ import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 import '../constants.dart';
 import '../models/dir_info.dart';
-import '../pages/ViewImageRight2Left.dart';
-import 'image_item.dart';
+import 'ViewImageRight2Left.dart';
+import '../widgets/image_item.dart';
 import '../utils/file_helper.dart';
 
-class DirItem extends StatefulWidget {
-  const DirItem({
+class ItemView extends StatefulWidget {
+  const ItemView({
     Key? key,
     required this.dirInfo,
   }) : super(key: key);
   final DirInfo dirInfo;
 
   @override
-  State<DirItem> createState() => _DirItemState();
+  State<ItemView> createState() => _ItemViewState();
 }
 
-class _DirItemState extends State<DirItem> {
+class _ItemViewState extends State<ItemView> {
   Uint8List? corverBytes;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _loadDirItems();
+    _loadItemViews();
   }
 
-  Future<void> _loadDirItems() async {
+  Future<void> _loadItemViews() async {
     corverBytes = await widget.dirInfo.getCoverBytes();
     setState(() {});
   }
@@ -43,7 +43,7 @@ class _DirItemState extends State<DirItem> {
     return GestureDetector(
       onTap: () {
         // TODO 点击事件
-        print('点击了文件夹' + widget.dirInfo.name);
+        print('点击了ItemView: ' + widget.dirInfo.name);
         //导航到新路由
         Navigator.push(context, MaterialPageRoute(builder: (context) {
           List<ImageItemBase> fileList = [];

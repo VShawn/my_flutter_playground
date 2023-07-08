@@ -19,6 +19,7 @@ dependencies:
   archive:
     path: ../packages/archive
   uuid: ^3.0.7
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

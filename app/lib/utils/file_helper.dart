@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import '../models/book_info.dart';
+import 'package:crypto/crypto.dart';
 
 /// 一个工具函数，用于列出输入目录中的所有后缀名包括在输入参数 extensions 的文件（当可选参数 includingSubDir = true 时，包括子目录）
 /// ```
@@ -11,8 +12,7 @@ import '../models/book_info.dart';
 ///   fileList.forEach((file) => print(file));
 /// }
 /// ```
-List<String> listFilesSync(String directoryPath,
-    {List<String>? extensions, bool includingSubDir = false}) {
+List<String> listFilesSync(String directoryPath, {List<String>? extensions, bool includingSubDir = false}) {
   var fileList = <String>[];
   var dir = Directory(directoryPath);
   if (!dir.existsSync()) {
@@ -21,10 +21,7 @@ List<String> listFilesSync(String directoryPath,
   }
 
   for (var fileOrDir in dir.listSync(recursive: includingSubDir)) {
-    if (fileOrDir is File &&
-        (extensions == null ||
-            extensions.any((ext) =>
-                fileOrDir.path.toLowerCase().endsWith(ext.toLowerCase())))) {
+    if (fileOrDir is File && (extensions == null || extensions.any((ext) => fileOrDir.path.toLowerCase().endsWith(ext.toLowerCase())))) {
       fileList.add(fileOrDir.path);
     } else {
       // print('Not a file: ${fileOrDir.path}');
@@ -33,8 +30,7 @@ List<String> listFilesSync(String directoryPath,
   return fileList;
 }
 
-Future<List<String>> listFilesAync(String directoryPath,
-    {List<String>? extensions, bool includingSubDir = false}) async {
+Future<List<String>> listFilesAync(String directoryPath, {List<String>? extensions, bool includingSubDir = false}) async {
   var fileList = <String>[];
   var dir = Directory(directoryPath);
   if (!dir.existsSync()) {
@@ -43,10 +39,7 @@ Future<List<String>> listFilesAync(String directoryPath,
   }
 
   await for (var fileOrDir in dir.list(recursive: includingSubDir)) {
-    if (fileOrDir is File &&
-        (extensions == null ||
-            extensions.any((ext) =>
-                fileOrDir.path.toLowerCase().endsWith(ext.toLowerCase())))) {
+    if (fileOrDir is File && (extensions == null || extensions.any((ext) => fileOrDir.path.toLowerCase().endsWith(ext.toLowerCase())))) {
       fileList.add(fileOrDir.path);
     } else {
       // print('Not a file: ${fileOrDir.path}');
@@ -72,8 +65,7 @@ Future<List<BookInfo>> listBooks(String path, {List<String>? bookExts}) async {
       if (bookExts.contains(ext)) {
         var name = p.basenameWithoutExtension(file.path);
         // 文件的 hash
-        books.add(
-            BookInfo(name: name, zipPath: file.path, hash: 'hash', size: 0));
+        books.add(BookInfo(name: name, zipPath: file.path, hash: 'hash', size: 0));
       }
     }
   }
@@ -94,4 +86,25 @@ Uint8List getFileBytesSync(String path) {
     return Uint8List(0);
   }
   return file.readAsBytesSync();
+}
+
+class FileHelper {
+  /// 计算文件的 md5
+  static String getFileHash(String filePath) {
+    var file = File(filePath);
+    if (!file.existsSync()) {
+      return '';
+    }
+    return md5.convert(file.readAsBytesSync()).toString();
+  }
+
+  /// 计算文件的 md5
+  static Future<String> getFileHashAsync(String filePath) async {
+    var file = File(filePath);
+    if (!file.existsSync()) {
+      return '';
+    }
+    final bytes = await file.readAsBytes();
+    return md5.convert(bytes).toString();
+  }
 }
