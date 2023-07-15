@@ -1,13 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:store/utils/file_helper.dart';
+import 'package:uuid/uuid.dart';
 
 class BookInfo {
   String id;
   String displayName;
-  String path;
+  String basePath;
+  String fileName;
   String hash;
   String coverBytes;
 
@@ -23,10 +27,13 @@ class BookInfo {
   /// 进度对应的文件路径
   String readFilePath;
 
+  String get fileFullName => join(basePath, fileName);
+
   BookInfo({
     required this.id,
     this.displayName = '',
-    required this.path,
+    required this.basePath,
+    required this.fileName,
     required this.hash,
     this.coverBytes = '',
     this.readProgress = 0,
@@ -40,7 +47,8 @@ class BookInfo {
     return BookInfo(
       id: map['id'],
       displayName: map['displayName'] ?? '',
-      path: map['path'],
+      basePath: map['basePath'],
+      fileName: map['fileName'],
       hash: map['hash'],
       coverBytes: map['coverBytes'] ?? '',
       readProgress: map['readProgress'] ?? 0,
@@ -54,7 +62,8 @@ class BookInfo {
     final Map<String, dynamic> map = {
       'id': id,
       'displayName': displayName,
-      'path': path,
+      'basePath': basePath,
+      'fileName': fileName,
       'hash': hash,
       'coverBytes': coverBytes,
       'readProgress': readProgress,
@@ -70,49 +79,47 @@ class BookInfo {
   }
 
   /// 返回文件夹中的所有书籍，不包括子文件夹，任何错误发生时返回空列表
-  static List<BookInfo> getBookFromDir(String dirPath) {
+  static Future<List<BookInfo>> getBookFromDirAsync(String dirPath) async {
     final List<BookInfo> bookList = [];
     final dir = Directory(dirPath);
     final List<FileSystemEntity> files = dir.listSync();
     if (!dir.existsSync()) return bookList;
     for (final file in files) {
       if (file is File) {
-        final path = file.path;
-        final hash = FileHelper.getFileHash(path);
+        final ext = extension(file.path).toLowerCase();
+        // 判断后缀名是否是 .zip 或 .rar
+        if (ext != '.zip' && ext != '.rar') continue;
+        final hash = await FileHelper.getFirstKbMd5Async(file.path);
         final bookInfo = BookInfo(
-          id: hash,
-          path: path,
-          displayName: basename(path),
+          id: '',
+          basePath: dirname(file.path),
+          fileName: basename(file.path),
+          displayName: basenameWithoutExtension(file.path),
           hash: hash,
         );
         bookList.add(bookInfo);
       }
+      // else if (file is Directory) {
+      //   final basePath = file.basePath;
+      //   final hash = await FileHelper.getFirstKbMd5Async(basePath);
+      //   final bookInfo = BookInfo(
+      //     id: '',
+      //     basePath: basePath,
+      //     displayName: basename(basePath),
+      //     hash: hash,
+      //   );
+      //   bookList.add(bookInfo);
+      // }
     }
     return bookList;
   }
 
-  /// 返回文件夹中的所有书籍，不包括子文件夹，任何错误发生时返回空列表
-  static Future<List<BookInfo>> getBookFromDirAsync(String dirPath) async {
-    final List<BookInfo> bookList = [];
-    final dir = Directory(dirPath);
-    if (!dir.existsSync()) {
-      return bookList;
+  Uint8List getCoverBytes() {
+    if (coverBytes.isEmpty) {
+      return Uint8List(0);
     }
-    final List<FileSystemEntity> files = dir.listSync();
-    for (final file in files) {
-      if (file is File) {
-        final path = file.path;
-        final hash = await FileHelper.getFileHashAsync(path);
-        final bookInfo = BookInfo(
-          id: hash,
-          path: path,
-          displayName: basename(path),
-          hash: hash,
-        );
-        bookList.add(bookInfo);
-      }
-    }
-    return bookList;
+    // base64 to bytes
+    return base64.decode(coverBytes);
   }
 }
 
@@ -129,16 +136,17 @@ class BookInfoDatabase {
 
   static Future<Database> _initDatabase() async {
     final databasePath = await getDatabasesPath();
-    final path = join(databasePath, 'book_info.db');
+    final basePath = join(databasePath, 'book_info.db');
     return openDatabase(
-      path,
+      basePath,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
         CREATE TABLE book_info(
           id TEXT PRIMARY KEY,
           displayName TEXT,
-          path TEXT UNIQUE,
+          basePath TEXT,
+          fileName TEXT,
           hash TEXT,
           coverBytes TEXT,
           readProgress REAL,
@@ -151,14 +159,19 @@ class BookInfoDatabase {
     );
   }
 
-  static Future<List<BookInfo>> getAllBookInfos() async {
+  static Future<List<BookInfo>> getAllBookInfos(String basePath) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('book_info');
+    final List<Map<String, dynamic>> maps = await db.query(
+      'book_info',
+      where: 'basePath = ?',
+      whereArgs: [basePath],
+    );
     return List.generate(maps.length, (i) {
       return BookInfo(
         id: maps[i]['id'],
         displayName: maps[i]['displayName'] ?? '',
-        path: maps[i]['path'],
+        basePath: maps[i]['basePath'],
+        fileName: maps[i]['fileName'],
         hash: maps[i]['hash'],
         coverBytes: maps[i]['coverBytes'] ?? '',
         readProgress: maps[i]['readProgress'] ?? 0,
@@ -171,6 +184,7 @@ class BookInfoDatabase {
 
   static Future<void> insertBookInfo(BookInfo bookInfo) async {
     final db = await database;
+    bookInfo.id = const Uuid().v4();
     await db.insert(
       'book_info',
       bookInfo.toJson(),

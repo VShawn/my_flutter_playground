@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:store/widgets/dir_item.dart';
+import 'package:store/models/book.dart';
+import 'package:store/pages/item_view.dart';
+import 'package:store/services/book_list_helper.dart';
 import 'package:store/widgets/infinite_page_view.dart';
 import 'package:store/widgets/zoom_image.dart';
 
@@ -13,7 +15,13 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows) {
+    // Initialize FFI
+    sqfliteFfiInit();
+    // Change the default factory
+    databaseFactory = databaseFactoryFfi;
+  }
+  runApp(const MyApp());
 }
 
 class AppScrollBehavior extends MaterialScrollBehavior {
@@ -69,26 +77,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<ItemView> _ItemViews = [];
+  List<ItemView> _itemViews = [];
 
   @override
   void initState() {
     super.initState();
-    _loadItemViews();
-    print('initState: _ItemViews.count = ${_ItemViews.length}');
+    SetPath('D:\\t');
   }
 
-  Future<void> _loadItemViews() async {
-    final directory = Directory('D:\\t');
-    final List<FileSystemEntity> entities = directory.listSync();
-    for (final entity in entities) {
-      if (entity is Directory) {
-        _ItemViews.add(ItemView(dirInfo: DirInfo.folder(entity.path)));
-      } else if (entity is File && entity.path.endsWith('.zip')) {
-        _ItemViews.add(ItemView(dirInfo: DirInfo.zip(entity.path, entity.path)));
-      }
-    }
-    setState(() {});
+  void SetPath(String path) async {
+    var itemViews = await BookListHelper.getItemViewList(path);
+    setState(() {
+      _itemViews = itemViews;
+    });
   }
 
   @override
@@ -100,14 +101,17 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             icon: Icon(Icons.date_range),
             tooltip: "编辑",
-            onPressed: () {},
+            onPressed: () {
+              print('Tap on edit');
+              SetPath('D:\\t');
+            },
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(18.0),
         child: Wrap(
-          children: _ItemViews,
+          children: _itemViews,
         ),
       ),
     );

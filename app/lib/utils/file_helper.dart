@@ -107,4 +107,21 @@ class FileHelper {
     final bytes = await file.readAsBytes();
     return md5.convert(bytes).toString();
   }
+
+  /// 计算文件前 1k 数据的 md5
+  static Future<String> getFirstKbMd5Async(String filePath) async {
+    final file = File(filePath);
+    if (!file.existsSync()) {
+      return '';
+    }
+    final length = await file.length();
+    final bytes = await file.openRead(0, length < 1024 ? length : 1024).toList().then((chunks) {
+      final bytes = <int>[];
+      for (final chunk in chunks) {
+        bytes.addAll(chunk);
+      }
+      return bytes;
+    });
+    return md5.convert(bytes).toString();
+  }
 }

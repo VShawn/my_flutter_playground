@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'dart:io';
 
-import 'package:store/widgets/dir_item.dart';
+import 'package:store/pages/item_view.dart';
 import 'package:archive/archive_io.dart';
 
 class ImageItemBase {
